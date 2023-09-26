@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.ZonedDateTime;
@@ -30,6 +31,7 @@ public class UserService {
         return repository.findByUpdateDateLessThanAndDepartmentId(date, department);
     }
 
+    @Transactional
     public void updateUsers(String departmentId) {
         List<User> users = getOldUserByDepartment(departmentId);
         for (User updatableUser : users) {
