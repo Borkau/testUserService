@@ -1,5 +1,6 @@
 package com.example.testuserservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,12 +14,15 @@ import java.util.Objects;
 public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
+    @JsonIgnore
     @Column(name = "id", nullable = false)
     private long id;
     @Basic
+    @JsonIgnore
     @Column(name = "login", nullable = false, length = 50)
     private String login;
     @Basic
+    @JsonIgnore
     @Column(name = "password", nullable = false, length = 256)
     private String password;
     @Basic
@@ -34,12 +38,15 @@ public class User {
     @Column(name = "active", nullable = false)
     private boolean active;
     @Basic
+    @JsonIgnore
     @Column(name = "update_date", nullable = false)
     private Timestamp updateDate;
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private UserRole roleId;
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "department_id", referencedColumnName = "id")
     private Department departmentId;
 

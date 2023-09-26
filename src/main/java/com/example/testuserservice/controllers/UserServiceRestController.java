@@ -1,22 +1,18 @@
 package com.example.testuserservice.controllers;
 
-import com.example.testuserservice.model.Department;
 import com.example.testuserservice.model.User;
-import com.example.testuserservice.model.UserWrapper;
 import com.example.testuserservice.repository.DepartmentRepository;
+import com.example.testuserservice.repository.UserRepository;
 import com.example.testuserservice.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 public class UserServiceRestController {
@@ -25,7 +21,8 @@ public class UserServiceRestController {
     UserService userService;
     @Autowired
     DepartmentRepository departmentRepository;
-
+    @Autowired
+    UserRepository userRepository;
     @RequestMapping("/hello")
     public String sendHello() {
         return "Hello";
@@ -33,29 +30,23 @@ public class UserServiceRestController {
 
     @PostMapping ("/users/update/{departmentId}")
     public void updateOldUser(@PathVariable String departmentId) {
-        Department department = departmentRepository.getDepartmentById(Long.valueOf(departmentId));
-        List<User> users = userService.getOldUserByDepartment(department);
-        for (User updatableUser : users) {
-            UserWrapper userData = getUserByExternalService(updatableUser.getLogin());
-            updatableUser.setFullName(userData.getFullName());
-            updatableUser.setEmail(userData.getEmail());
-        }
-        userService.updateUsers(users);
+        userService.updateUsers(departmentId);
     }
 
-    private UserWrapper getUserByExternalService(String login) {
-        String url = "https://9b421c8d-9776-44c4-bbe6-d6ccea99a640.mock.pstmn.io/users"; // TODO не забыть поменять на тестовый вариант
-        RestTemplate restTemplate = new RestTemplate();
+    @GetMapping(path = "/users/page")
+    public Page<User> loadUsersPage(
+            @PageableDefault()
+            Pageable pageable) {
+        return userRepository.findAllActiveAdminsPageByDepartment(pageable);
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+    @GetMapping(path = "/users")
+    public ResponseEntity<List<User>> findAllUsers() {
+        return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
+    }
 
-        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
-        ResponseEntity<Object[]> result =
-                restTemplate.exchange(url, HttpMethod.GET, entity, Object[].class);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        return objectMapper.convertValue(Objects.requireNonNull(result.getBody())[0], UserWrapper.class);
+    @GetMapping(path = "/users/pageable")
+    public Page<User> findAllUsersPageable(@PageableDefault() Pageable pageable) {
+        return userRepository.findActiveAdmins(pageable);
     }
 }
